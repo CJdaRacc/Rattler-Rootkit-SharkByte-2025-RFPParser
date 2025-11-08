@@ -48,45 +48,47 @@ export default function Templating(){
   }
 
   return (
-    <div>
-      <h2>Templating</h2>
-      {error && <div style={{color:'#b91c1c'}}>{error}</div>}
-      {status && <div style={{color:'#334155'}}>{status}</div>}
+    <div className="min-h-[70vh] flex justify-center">
+      <div className="w-full max-w-6xl mx-auto px-4">
+        <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-4">Templating</h2>
+        {error && <div style={{color:'#b91c1c'}}>{error}</div>}
+        {status && <div style={{color:'#334155'}}>{status}</div>}
 
-      <section style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:12}}>
-        <div>
-          <h3>Essentials</h3>
-          <label>Organization Name<input name="org_name" value={ess.org_name} onChange={change} /></label>
-          <label>Contact Name<input name="contact_name" value={ess.contact_name} onChange={change} /></label>
-          <label>Email<input type="email" name="email" value={ess.email} onChange={change} /></label>
-          <label>Phone<input name="phone" value={ess.phone} onChange={change} /></label>
-          <label>Address<input name="address" value={ess.address} onChange={change} /></label>
-          <label>Proposal Title<input name="proposal_title" value={ess.proposal_title} onChange={change} /></label>
-          <label>Executive Summary<textarea name="exec_summary" rows={5} value={ess.exec_summary} onChange={change} /></label>
-          <label>Goals & Objectives<textarea name="goals" rows={4} value={ess.goals} onChange={change} /></label>
-          <label>Scope / Activities<textarea name="scope" rows={5} value={ess.scope} onChange={change} /></label>
-          <label>Timeline<textarea name="timeline" rows={3} value={ess.timeline} onChange={change} /></label>
-          <label>Budget Total<input name="budget_total" value={ess.budget_total} onChange={change} placeholder="$" /></label>
-          <label>Budget Narrative<textarea name="budget_narrative" rows={4} value={ess.budget_narrative} onChange={change} /></label>
-          <label>Organizational Capacity<textarea name="capacity" rows={4} value={ess.capacity} onChange={change} /></label>
-          <label>Evaluation<textarea name="evaluation" rows={4} value={ess.evaluation} onChange={change} /></label>
-          <label>Outcomes<textarea name="outcomes" rows={4} value={ess.outcomes} onChange={change} /></label>
-          <label>Submission Format<input name="submission_format" value={ess.submission_format} onChange={change} /></label>
-          <label>Due Dates<input name="due_dates" value={ess.due_dates} onChange={change} placeholder="e.g., March 1, 2025; 2025-03-01" /></label>
-          <button onClick={generate} style={{marginTop:8}}>Generate Half-Complete Template (Gemini)</button>
-        </div>
-        <div>
-          <h3>Draft Proposal (Editable)</h3>
-          {!draft ? <div style={{color:'#64748b'}}>No draft yet. Generate to prefill.</div> : (
-            <DraftEditor draft={draft} onChange={updateDraft} />
-          )}
-          <div style={{marginTop:12, display:'flex', gap:8}}>
-            <button onClick={()=>exportFile('pdf')}>Download PDF</button>
-            <button onClick={()=>exportFile('docx')}>Download DOCX</button>
-            <button onClick={()=>exportFile('xlsx')}>Download EXCEL</button>
+        <section style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:12}}>
+          <div>
+            <h3>Essentials</h3>
+            <label>Organization Name<input name="org_name" value={ess.org_name} onChange={change} /></label>
+            <label>Contact Name<input name="contact_name" value={ess.contact_name} onChange={change} /></label>
+            <label>Email<input type="email" name="email" value={ess.email} onChange={change} /></label>
+            <label>Phone<input name="phone" value={ess.phone} onChange={change} /></label>
+            <label>Address<input name="address" value={ess.address} onChange={change} /></label>
+            <label>Proposal Title<input name="proposal_title" value={ess.proposal_title} onChange={change} /></label>
+            <label>Executive Summary<textarea name="exec_summary" rows={5} value={ess.exec_summary} onChange={change} /></label>
+            <label>Goals & Objectives<textarea name="goals" rows={4} value={ess.goals} onChange={change} /></label>
+            <label>Scope / Activities<textarea name="scope" rows={5} value={ess.scope} onChange={change} /></label>
+            <label>Timeline<textarea name="timeline" rows={3} value={ess.timeline} onChange={change} /></label>
+            <label>Budget Total<input name="budget_total" value={ess.budget_total} onChange={change} placeholder="$" /></label>
+            <label>Budget Narrative<textarea name="budget_narrative" rows={4} value={ess.budget_narrative} onChange={change} /></label>
+            <label>Organizational Capacity<textarea name="capacity" rows={4} value={ess.capacity} onChange={change} /></label>
+            <label>Evaluation<textarea name="evaluation" rows={4} value={ess.evaluation} onChange={change} /></label>
+            <label>Outcomes<textarea name="outcomes" rows={4} value={ess.outcomes} onChange={change} /></label>
+            <label>Submission Format<input name="submission_format" value={ess.submission_format} onChange={change} /></label>
+            <label>Due Dates<input name="due_dates" value={ess.due_dates} onChange={change} placeholder="e.g., March 1, 2025; 2025-03-01" /></label>
+            <button onClick={generate} style={{marginTop:8}}>Generate Half-Complete Template (Gemini)</button>
           </div>
-        </div>
-      </section>
+          <div>
+            <h3>Draft Proposal (Editable)</h3>
+            {!draft ? <div style={{color:'#64748b'}}>No draft yet. Generate to prefill.</div> : (
+              <DraftEditor draft={draft} onChange={updateDraft} />
+            )}
+            <div style={{marginTop:12, display:'flex', gap:8}}>
+              <button onClick={()=>exportFile('pdf')}>Download PDF</button>
+              <button onClick={()=>exportFile('docx')}>Download DOCX</button>
+              <button onClick={()=>exportFile('xlsx')}>Download EXCEL</button>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

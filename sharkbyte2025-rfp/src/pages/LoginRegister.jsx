@@ -1,7 +1,10 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api.js';
+import WhiteHouseLogo from '../components/WhiteHouseLogo.jsx';
 
 export default function LoginRegister({ onAuthed }){
+  const navigate = useNavigate();
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,9 +19,11 @@ export default function LoginRegister({ onAuthed }){
       if (mode === 'login'){
         const me = await api('/api/auth/login', { method: 'POST', body: { email, password } });
         onAuthed && onAuthed(me);
+        navigate('/rfp');
       } else {
         const me = await api('/api/auth/register', { method: 'POST', body: { name, email, password, companyName } });
         onAuthed && onAuthed(me);
+        navigate('/rfp');
       }
     } catch (e) {
       setError(e.message);
@@ -26,7 +31,8 @@ export default function LoginRegister({ onAuthed }){
   }
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center py-8">
+    <div className="min-h-screen flex flex-col items-center justify-center py-10">
+      <WhiteHouseLogo className="w-16 h-16 mb-6 text-brand-700 dark:text-brand-300" />
       <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
         <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-4">{mode === 'login' ? 'Login' : 'Register'}</h2>
         {error && <div className="text-red-700 dark:text-red-400 mb-3 text-sm">{error}</div>}

@@ -49,60 +49,62 @@ export default function Profile({ me, setMe }){
   }
 
   return (
-    <div>
-      <h2>Profile</h2>
-      <div style={{color:'#475569'}}>{name}</div>
-      <div style={{color:'#64748b', marginBottom:12}}>{companyName}</div>
+    <div className="min-h-[70vh] flex justify-center">
+      <div className="w-full max-w-6xl mx-auto px-4">
+        <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-1">Profile</h2>
+        <div style={{color:'#475569'}}>{name}</div>
+        <div style={{color:'#64748b', marginBottom:12}}>{companyName}</div>
 
-      {error && <div style={{color:'#b91c1c'}}>{error}</div>}
+        {error && <div style={{color:'#b91c1c'}}>{error}</div>}
 
-      <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:16}}>
-        <section>
-          <h3>Tags</h3>
-          <div style={{display:'flex', gap:8, marginBottom:8}}>
-            <input type="text" value={newTag} onChange={e=>setNewTag(e.target.value)} placeholder="Add tag" />
-            <button onClick={addTag}>Add</button>
-          </div>
-          <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
-            {tags.map(t => (
-              <span key={t} style={{background:'#e2e8f0', padding:'4px 8px', borderRadius:999}}>
-                {t} <button onClick={()=>removeTag(t)} title="Remove" style={{marginLeft:6}}>×</button>
-              </span>
-            ))}
-          </div>
+        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:16}}>
+          <section>
+            <h3>Tags</h3>
+            <div style={{display:'flex', gap:8, marginBottom:8}}>
+              <input type="text" value={newTag} onChange={e=>setNewTag(e.target.value)} placeholder="Add tag" />
+              <button onClick={addTag}>Add</button>
+            </div>
+            <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+              {tags.map(t => (
+                <span key={t} style={{background:'#e2e8f0', padding:'4px 8px', borderRadius:999}}>
+                  {t} <button onClick={()=>removeTag(t)} title="Remove" style={{marginLeft:6}}>×</button>
+                </span>
+              ))}
+            </div>
+          </section>
+          <section>
+            <h3>Past RFPs</h3>
+            <ul style={{paddingLeft:18}}>
+              {rfps.map(r => (
+                <li key={r._id}>
+                  <div><strong>{r.original_filename}</strong> — <em>{r.docType}</em> — Accuracy: {r.accuracy || 0}%</div>
+                  <div style={{fontSize:12, color:'#64748b'}}>Missing: {(r.missingItems||[]).join(', ') || '—'}</div>
+                  <div style={{display:'flex', gap:6, flexWrap:'wrap', marginTop:6}}>
+                    {(r.tags||[]).map(t => <span key={t} style={{background:'#f1f5f9', padding:'2px 6px', borderRadius:6}}>{t}</span>)}
+                  </div>
+                  <TagEditor initial={r.tags||[]} onSave={(tags)=>saveRfpTags(r._id, tags)} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+
+        <section style={{marginTop:16}}>
+          <h3>Businesses (optional)</h3>
+          <button onClick={addBusiness}>Add Business</button>
+          {businesses.map((b, i) => (
+            <div key={i} style={{border:'1px solid #e2e8f0', borderRadius:8, padding:8, marginTop:8}}>
+              <label>Name<input type="text" value={b.name||''} onChange={e=>updateBusiness(i,'name',e.target.value)} /></label>
+              <label>EIN<input type="text" value={b.ein||''} onChange={e=>updateBusiness(i,'ein',e.target.value)} /></label>
+              <label>Notes<input type="text" value={b.notes||''} onChange={e=>updateBusiness(i,'notes',e.target.value)} /></label>
+              <button onClick={()=>removeBusiness(i)}>Remove</button>
+            </div>
+          ))}
         </section>
-        <section>
-          <h3>Past RFPs</h3>
-          <ul style={{paddingLeft:18}}>
-            {rfps.map(r => (
-              <li key={r._id}>
-                <div><strong>{r.original_filename}</strong> — <em>{r.docType}</em> — Accuracy: {r.accuracy || 0}%</div>
-                <div style={{fontSize:12, color:'#64748b'}}>Missing: {(r.missingItems||[]).join(', ') || '—'}</div>
-                <div style={{display:'flex', gap:6, flexWrap:'wrap', marginTop:6}}>
-                  {(r.tags||[]).map(t => <span key={t} style={{background:'#f1f5f9', padding:'2px 6px', borderRadius:6}}>{t}</span>)}
-                </div>
-                <TagEditor initial={r.tags||[]} onSave={(tags)=>saveRfpTags(r._id, tags)} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
 
-      <section style={{marginTop:16}}>
-        <h3>Businesses (optional)</h3>
-        <button onClick={addBusiness}>Add Business</button>
-        {businesses.map((b, i) => (
-          <div key={i} style={{border:'1px solid #e2e8f0', borderRadius:8, padding:8, marginTop:8}}>
-            <label>Name<input type="text" value={b.name||''} onChange={e=>updateBusiness(i,'name',e.target.value)} /></label>
-            <label>EIN<input type="text" value={b.ein||''} onChange={e=>updateBusiness(i,'ein',e.target.value)} /></label>
-            <label>Notes<input type="text" value={b.notes||''} onChange={e=>updateBusiness(i,'notes',e.target.value)} /></label>
-            <button onClick={()=>removeBusiness(i)}>Remove</button>
-          </div>
-        ))}
-      </section>
-
-      <div style={{marginTop:16}}>
-        <button onClick={saveProfile} disabled={saving}>{saving?'Saving...':'Save Profile'}</button>
+        <div style={{marginTop:16}}>
+          <button onClick={saveProfile} disabled={saving}>{saving?'Saving...':'Save Profile'}</button>
+        </div>
       </div>
     </div>
   );

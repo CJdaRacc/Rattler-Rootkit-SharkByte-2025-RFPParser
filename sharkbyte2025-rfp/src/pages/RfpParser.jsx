@@ -42,8 +42,9 @@ export default function RfpParser(){
   const missing = rfp?.missingItems || [];
 
   return (
-    <div>
-      <h2>RFP Parser</h2>
+    <div className="min-h-[70vh] flex justify-center">
+      <div className="w-full max-w-6xl mx-auto px-4">
+        <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-4">RFP Parser</h2>
       {error && <div style={{color:'#b91c1c', marginBottom:8}}>{error}</div>}
 
       <form onSubmit={onUpload} style={{display:'flex', gap:8, alignItems:'center'}}>
@@ -111,7 +112,8 @@ export default function RfpParser(){
           </section>
         </div>
       )}
-    </div>
+        </div>
+      </div>
   );
 }
 
