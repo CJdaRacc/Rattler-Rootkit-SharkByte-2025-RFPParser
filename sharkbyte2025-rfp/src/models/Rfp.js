@@ -22,11 +22,17 @@ const KeywordSuggestionSchema = new mongoose.Schema({
 }, { _id: true });
 
 const RfpSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
   original_filename: { type: String },
+  docType: { type: String, enum: ['pdf', 'docx', 'doc'], default: 'pdf' },
+  tags: { type: [String], default: [] },
   uploadMeta: { type: mongoose.Schema.Types.Mixed },
   extractedText: { type: String },
   extractedTextHash: { type: String },
   parsedRequirements: { type: [RequirementSchema], default: [] },
+  keywords: { type: [String], default: [] },
+  accuracy: { type: Number, default: 0 },
+  missingItems: { type: [String], default: [] },
   keywordSuggestions: { type: [KeywordSuggestionSchema], default: [] },
 }, { timestamps: true });
 
