@@ -2,7 +2,6 @@ import React from 'react';
 import { Link, Routes, Route, Navigate } from 'react-router-dom';
 import UploadRfp from './pages/UploadRfp.jsx';
 import Templates from './pages/Templates.jsx';
-import Proposals from './pages/Proposals.jsx';
 
 export default function App() {
   return (
@@ -10,9 +9,8 @@ export default function App() {
       <header style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
         <h2 style={{ marginRight: 'auto' }}>RFP → Proposal Generator (MERN)</h2>
         <nav style={{ display: 'flex', gap: 12 }}>
-          <Link to="/rfps">RFPs</Link>
-          <Link to="/templates">Templates</Link>
-          <Link to="/proposals">Proposals</Link>
+          <Link to="/rfps">Analyze RFP</Link>
+          <Link to="/templates">Template</Link>
         </nav>
       </header>
       <main style={{ marginTop: 24 }}>
@@ -20,7 +18,6 @@ export default function App() {
           <Route path="/" element={<Navigate to="/rfps" replace />} />
           <Route path="/rfps" element={<UploadRfp />} />
           <Route path="/templates" element={<Templates />} />
-          <Route path="/proposals" element={<Proposals />} />
         </Routes>
       </main>
       <footer style={{ marginTop: 40, fontSize: 12, color: '#555' }}>
