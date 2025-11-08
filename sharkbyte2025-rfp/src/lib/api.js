@@ -1,5 +1,14 @@
+const BASE_URL = import.meta?.env?.VITE_API_URL || '';
+
+function toUrl(path){
+  if (!BASE_URL) return path; // relative to current origin (works with Vite proxy)
+  if (path.startsWith('http')) return path;
+  return BASE_URL.replace(/\/$/, '') + (path.startsWith('/') ? path : `/${path}`);
+}
+
 export async function api(path, { method = 'GET', body, headers = {} } = {}) {
-  const res = await fetch(path, {
+  const url = toUrl(path);
+  const res = await fetch(url, {
     method,
     headers: { 'Content-Type': 'application/json', ...headers },
     credentials: 'include',
