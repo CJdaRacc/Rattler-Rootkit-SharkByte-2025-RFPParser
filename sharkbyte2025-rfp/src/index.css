@@ -1,68 +1,23 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
+@layer base {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    color-scheme: light dark;
   }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+  html { @apply h-full; }
+  body { @apply min-h-full bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100; }
+  a { @apply text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300; }
+}
+
+@layer components {
+  .container-app { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
+  .card { @apply bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-card; }
+  .card-body { @apply p-4 sm:p-6; }
+  .btn { @apply inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn-primary { @apply bg-brand-600 text-white hover:bg-brand-700 focus:ring-brand-500 dark:focus:ring-brand-400 focus:ring-offset-white dark:focus:ring-offset-slate-900; }
+  .btn-secondary { @apply bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600; }
+  .badge { @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border border-slate-200 dark:border-slate-600; }
+  .badge-accent { @apply border-transparent bg-accent-500/10 text-accent-600 dark:text-accent-400; }
 }

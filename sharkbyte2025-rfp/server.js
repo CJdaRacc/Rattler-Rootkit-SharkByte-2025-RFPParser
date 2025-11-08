@@ -38,6 +38,7 @@ app.use(helmet({
       "style-src": ["'self'", 'https:', "'unsafe-inline'"],
       "img-src": ["'self'", 'data:'],
       "connect-src": ["'self'"],
+      "font-src": ["'self'", 'https:'],
     },
   },
   crossOriginEmbedderPolicy: false,
