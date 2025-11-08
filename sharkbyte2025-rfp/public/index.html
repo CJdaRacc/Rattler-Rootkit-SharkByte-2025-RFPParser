@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SharkByte 2025 — RFP Analyzer & Template</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>RFP Analyzer & Proposal Template</h1>
+    <p class="subtitle">Generate structured requirements from an RFP and prepare a proposal draft template.</p>
+  </header>
+
+  <main>
+    <nav class="tabs">
+      <button class="tab active" data-tab="analyze">Analyze RFP</button>
+      <button class="tab" data-tab="template">Templating</button>
+    </nav>
+
+    <section id="analyze" class="tab-panel active">
+      <div class="card">
+        <h2>Upload RFP PDF</h2>
+        <form id="analyze-form">
+          <input type="file" id="rfpFile" accept="application/pdf" required />
+          <button type="submit">Analyze</button>
+        </form>
+        <div id="analyze-status" class="status"></div>
+      </div>
+
+      <div class="card">
+        <h3>Project Context for Keywords</h3>
+        <p>We will redact sensitive info before calling Gemini.</p>
+        <label>
+          Project Goal
+          <textarea id="projectGoal" placeholder="Briefly describe the project goal..."></textarea>
+        </label>
+        <label>
+          Summary
+          <textarea id="summary" placeholder="Short summary for alignment and keywords..."></textarea>
+        </label>
+        <button id="btnKeywords" disabled>Generate Keywords (Gemini)</button>
+        <div id="keywords" class="pillbox"></div>
+      </div>
+
+      <div class="card">
+        <h2>Parsed Requirements</h2>
+        <div id="parsed"></div>
+      </div>
+
+      <div class="card">
+        <h3>Extracted Text (for debugging)</h3>
+        <pre id="extractedText" class="mono"></pre>
+      </div>
+    </section>
+
+    <section id="template" class="tab-panel">
+      <div class="card">
+        <h2>Proposal Template</h2>
+        <p>This form captures essentials inspired by the sample RFP Template. Fields are fillable; optional sections include a checkbox.</p>
+        <form id="template-form">
+          <fieldset>
+            <legend>Cover Information</legend>
+            <label>Organization Name <input type="text" name="org_name" /></label>
+            <label>Contact Name <input type="text" name="contact_name" /></label>
+            <label>Email <input type="email" name="email" /></label>
+            <label>Phone <input type="tel" name="phone" /></label>
+            <label>Address <input type="text" name="address" /></label>
+            <label>Proposal Title <input type="text" name="proposal_title" /></label>
+          </fieldset>
+          <fieldset>
+            <legend>Executive Summary</legend>
+            <textarea name="exec_summary" rows="6" placeholder="One-page overview of the proposal..."></textarea>
+            <label class="optional"><input type="checkbox" name="include_problem_statement" checked /> Include Problem Statement</label>
+            <textarea name="problem_statement" rows="4" placeholder="Problem statement (optional)"></textarea>
+          </fieldset>
+          <fieldset>
+            <legend>Project Description</legend>
+            <label>Goals & Objectives</label>
+            <textarea name="goals" rows="5" placeholder="Specific, measurable objectives..."></textarea>
+            <label>Scope of Work / Activities</label>
+            <textarea name="scope" rows="6" placeholder="Tasks, milestones, deliverables..."></textarea>
+            <label>Timeline</label>
+            <textarea name="timeline" rows="4" placeholder="Key dates and phasing..."></textarea>
+          </fieldset>
+          <fieldset>
+            <legend>Budget</legend>
+            <label>Total Requested Amount <input type="text" name="budget_total" placeholder="$" /></label>
+            <label>Budget Narrative</label>
+            <textarea name="budget_narrative" rows="5" placeholder="Explain costs and assumptions..."></textarea>
+            <label class="optional"><input type="checkbox" name="include_match_funds" /> Include Matching Funds</label>
+            <textarea name="match_funds" rows="3" placeholder="Matching funds (optional)"></textarea>
+          </fieldset>
+          <fieldset>
+            <legend>Organizational Capacity</legend>
+            <label>Team & Experience</label>
+            <textarea name="capacity" rows="5" placeholder="Relevant experience, roles, bios..."></textarea>
+            <label class="optional"><input type="checkbox" name="include_letters" /> Include Letters of Support</label>
+            <textarea name="letters" rows="3" placeholder="Notes about letters of support (optional)"></textarea>
+          </fieldset>
+          <fieldset>
+            <legend>Evaluation & Outcomes</legend>
+            <label>Evaluation Plan</label>
+            <textarea name="evaluation" rows="5" placeholder="KPIs, data collection, reporting..."></textarea>
+            <label>Expected Outcomes & Impact</label>
+            <textarea name="outcomes" rows="4" placeholder="Outputs, outcomes, impact measures..."></textarea>
+          </fieldset>
+          <fieldset>
+            <legend>Compliance & Submission</legend>
+            <label>Submission Format</label>
+            <input type="text" name="submission_format" placeholder="e.g., PDF via portal" />
+            <label>Due Dates</label>
+            <input type="text" name="due_dates" placeholder="e.g., March 1, 2025; 2025-03-01" />
+            <label>Evidence/Attachments Checklist</label>
+            <div id="attachments-list"></div>
+          </fieldset>
+          <div class="actions">
+            <button type="button" id="btnExport">Export JSON</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <small>Tip: Use the GOOD RFP sample as a guide when reviewing parsed requirements.</small>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

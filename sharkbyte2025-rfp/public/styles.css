@@ -1,0 +1,23 @@
+*{box-sizing:border-box}body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:0;color:#0f172a;background:#f8fafc}header{padding:20px 24px;background:#0f172a;color:#fff}h1{margin:0;font-size:22px}header .subtitle{margin:6px 0 0 0;color:#cbd5e1}
+main{padding:16px}
+.tabs{display:flex;gap:8px;margin-bottom:12px}.tab{background:#e2e8f0;border:1px solid #cbd5e1;padding:8px 12px;border-radius:8px;cursor:pointer}.tab.active{background:#0ea5e9;color:#fff;border-color:#0ea5e9}
+.tab-panel{display:none}.tab-panel.active{display:block}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.status{margin-top:8px;color:#334155}
+.mono{white-space:pre-wrap;background:#0b1021;color:#e2e8f0;padding:12px;border-radius:8px;max-height:240px;overflow:auto}
+.requirements{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.req-item{border:1px solid #e2e8f0;border-radius:10px;padding:10px}
+.req-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.req-id{font-weight:600;color:#334155}
+.req-title{flex:1;font-weight:600}
+.req-cat{background:#e2e8f0;padding:2px 6px;border-radius:6px;color:#0f172a}
+.req-prio{padding:2px 6px;border-radius:6px;color:#fff}.prio-high{background:#ef4444}.prio-medium{background:#f59e0b}.prio-low{background:#10b981}
+label{display:block;margin:8px 0 6px;color:#0f172a}input[type=text],input[type=email],input[type=tel],textarea{width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;background:#fff}textarea{resize:vertical}
+fieldset{border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:12px}
+legend{padding:0 6px;color:#0f172a;font-weight:600}
+.optional{display:flex;align-items:center;gap:6px;margin-top:6px}
+.checkbox{display:block;margin:4px 0}
+.actions{display:flex;justify-content:flex-end}
+.pillbox{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.pill{background:#0ea5e9;color:#fff;padding:4px 8px;border-radius:999px;font-size:12px}
+footer{padding:12px 16px;color:#64748b}
