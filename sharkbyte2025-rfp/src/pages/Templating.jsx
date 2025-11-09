@@ -86,8 +86,8 @@ export default function Templating(){
         </fieldset>
         <fieldset>
           <legend>Compliance & Submission</legend>
-          <label>Submission Format<input name="submission_format" value={ess.submission_format} onChange={change} /></label>
-          <label>Due Dates<input name="due_dates" value={ess.due_dates} onChange={change} placeholder="e.g., March 1, 2025; 2025-03-01" /></label>
+          <label>Submission Format<input type="text" name="submission_format" value={ess.submission_format} onChange={change} placeholder="e.g., PDF upload to Vendor Portal; 2 copies; signed forms" /></label>
+          <label>Due Dates<input type="text" name="due_dates" value={ess.due_dates} onChange={change} placeholder="e.g., March 1, 2025; 2025-03-01" /></label>
         </fieldset>
         <div className="actions">
           <button onClick={generate}>Generate Half-Complete Template (Gemini)</button>

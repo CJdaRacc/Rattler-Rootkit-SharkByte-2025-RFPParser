@@ -16,7 +16,7 @@ export default function HackathonLayout({ children }){
 
       <main>
         <div className="container">
-          {!onRfp && (
+          {!onRfp && !onTpl && (
             <nav className="tabs" aria-label="Main tabs">
               <Link className={`tab ${onRfp ? 'active' : ''}`} to="/rfp">Analyze RFP</Link>
               <Link className={`tab ${onTpl ? 'active' : ''}`} to="/templating">Templating</Link>

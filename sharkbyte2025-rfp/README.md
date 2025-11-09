@@ -106,10 +106,7 @@ Verification checklist:
 4. Start dev backend + frontend: `npm run dev`
    - API: http://localhost:3000
    - Client (Vite): http://localhost:5173
-5. Upload a sample PDF from `samples/` and click “Get Suggestions (Gemini)”.
-
-### One‑liner elevator pitch (200 chars)
-Turn messy RFP PDFs into structured requirements and AI‑guided actions. A MERN app that speeds compliance, sharpens proposals, and tracks progress—securely, fast, and demo‑ready in minutes.
+5. Upload a sample PDF and click “Get Suggestions (Gemini)”.
 
 ## Prerequisites
 - Node.js 20 or newer (check with `node -v`)
