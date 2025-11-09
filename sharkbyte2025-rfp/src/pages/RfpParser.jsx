@@ -1,12 +1,26 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api, uploadFile } from '../lib/api.js';
+import TipCarousel from '../components/TipCarousel.jsx';
 
 export default function RfpParser(){
+  const tips = useMemo(() => [
+    'Define Needs, Not Solutions: State what you need (e.g., "17 workflows across 3 workstreams") but avoid prescribing the exact technical solution.',
+    'Include Flow Documentation: Add future-state flows if available to give vendors a clear visual roadmap.',
+    'Specify Mandatory M&O Periods: If a fixed Maintenance & Operations period is required after go-live, mark it as mandatory.',
+    'List Allocated Resources: List internal resources by role and allocation percentage to set delivery expectations.',
+    'Be Specific or Estimate: Be exact (e.g., "10 permission sets") or provide a confident range (e.g., "10–15").',
+    'Detail Data Needs: Outline migration/conversion scope and whether cleansing or mapping is already complete.',
+    'Keep SLAs Reasonable: Avoid unrealistic SLAs (e.g., 100% uptime with penalties) that deter quality vendors.',
+    'Ensure Testability: Write requirements so they are testable to prevent scope padding and ambiguity.',
+    'Mandate and Answer Q&A: Run a written Q&A and answer every question—even if the answer is an estimate or "We don’t know yet."',
+    'State Delivery Model Preference: If onshore or a specific model is required, state it clearly and in multiple sections.',
+    'Ignore Team Resumes: Don’t require exact named resumes for the delivery team; request representative profiles instead.',
+    'Avoid the Lowest Bid Trap: The lowest bid can cost more via change orders and quality issues—opt for value, not just price.'
+  ], []);
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [rfp, setRfp] = useState(null); // full RFP doc from server
-  const [projectGoal, setProjectGoal] = useState('');
-  const [summary, setSummary] = useState('');
+  // Auto-keywords: no user input required
   const [suggestions, setSuggestions] = useState({});
   const [error, setError] = useState('');
 
@@ -22,10 +36,10 @@ export default function RfpParser(){
     finally { setUploading(false); }
   }
 
-  async function generateKeywords(){
+  async function autoKeywords(){
     if (!rfp?._id) return;
     try {
-      const data = await api(`/api/rfps/${rfp._id}/keywords`, { method: 'POST', body: { projectGoal, summary } });
+      const data = await api(`/api/rfps/${rfp._id}/auto-keywords`, { method: 'POST' });
       setRfp(data.rfp);
     } catch (e) { setError(e.message); }
   }
@@ -64,11 +78,10 @@ export default function RfpParser(){
           </div>
 
           <div className="card">
-            <h3>Project Context for Keywords</h3>
-            <label>Project Goal<textarea rows={4} value={projectGoal} onChange={e=>setProjectGoal(e.target.value)} /></label>
-            <label>Summary<textarea rows={4} value={summary} onChange={e=>setSummary(e.target.value)} /></label>
-            <button onClick={generateKeywords} disabled={!rfp?._id} style={{marginTop:8}}>Generate Keywords (Gemini)</button>
-            <div className="pillbox">
+            <h3>Suggested Keywords</h3>
+            <p className="status">No input needed — we’ll infer keywords from your RFP’s overview/summary/goals and public context.</p>
+            <button onClick={autoKeywords} disabled={!rfp?._id} style={{marginTop:8}}>Suggest Keywords (Auto)</button>
+            <div className="pillbox" style={{marginTop:10}}>
               {keywords.map(k => <span key={k} className="pill">{k}</span>)}
             </div>
           </div>
@@ -114,6 +127,9 @@ export default function RfpParser(){
           </div>
         </>
       )}
+      <div className="card">
+        <TipCarousel tips={tips} rotateMs={6000} lifetimeMs={90000} storageKey={null} variant="inline" />
+      </div>
     </div>
   );
 }

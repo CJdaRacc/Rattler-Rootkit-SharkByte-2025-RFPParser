@@ -16,10 +16,12 @@ export default function HackathonLayout({ children }){
 
       <main>
         <div className="container">
-          <nav className="tabs" aria-label="Main tabs">
-            <Link className={`tab ${onRfp ? 'active' : ''}`} to="/rfp">Analyze RFP</Link>
-            <Link className={`tab ${onTpl ? 'active' : ''}`} to="/templating">Templating</Link>
-          </nav>
+          {!onRfp && (
+            <nav className="tabs" aria-label="Main tabs">
+              <Link className={`tab ${onRfp ? 'active' : ''}`} to="/rfp">Analyze RFP</Link>
+              <Link className={`tab ${onTpl ? 'active' : ''}`} to="/templating">Templating</Link>
+            </nav>
+          )}
 
           {children}
         </div>

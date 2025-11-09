@@ -16,11 +16,13 @@ import mammoth from 'mammoth';
 import rateLimit from 'express-rate-limit';
 
 import { parseRfp } from './src/parser.js';
-import { generateKeywords } from './src/gemini.js';
+import { generateKeywords, generateAutoKeywords } from './src/gemini.js';
 import { redactSensitive } from './src/redact.js';
 import { Rfp } from './src/models/Rfp.js';
 import { Proposal } from './src/models/Proposal.js';
 import { User } from './src/models/User.js';
+import { extractRfpIntro } from './src/utils/intro.js';
+import { searchWeb } from './src/search.js';
 
 dotenv.config();
 
@@ -338,6 +340,88 @@ app.post('/api/rfps/:id/keywords', requireAuth, async (req, res) => {
     res.status(500).json({ error: 'Failed to generate keywords for RFP.' });
   }
 });
+
+// Auto keywords (no user input): uses intro extraction + optional web search + Gemini
+const AUTO_KW_TTL_MIN = parseInt(process.env.AUTO_KEYWORDS_CACHE_TTL_MIN || '30', 10);
+const autoKwCache = new Map(); // key: rfpId, value: { at: ms, result }
+
+app.post('/api/rfps/:id/auto-keywords', requireAuth, async (req, res) => {
+  try {
+    if (!MONGO_URI) return res.status(500).json({ error: 'Persistence disabled: set MONGO_URI.' });
+    const force = String(req.query.force || 'false') === 'true';
+    const rfp = await Rfp.findOne({ _id: req.params.id, userId: req.user._id });
+    if (!rfp) return res.status(404).json({ error: 'RFP not found' });
+
+    // Cache check
+    const cached = autoKwCache.get(String(rfp._id));
+    if (!force && cached && (Date.now() - cached.at) < AUTO_KW_TTL_MIN * 60 * 1000) {
+      return res.json(cached.result);
+    }
+
+    // Ensure intro fields
+    let introType = rfp.introType || 'unknown';
+    let introText = rfp.introText || '';
+    if (!introText || introText.length < 200) {
+      const ext = extractRfpIntro(rfp.extractedText || '');
+      introType = ext.introType || 'unknown';
+      introText = ext.introText || '';
+      rfp.introType = introType;
+      rfp.introText = introText;
+    }
+
+    // Redact before external use
+    const safeIntro = redactSensitive(introText || '').slice(0, 6000);
+
+    // Optional web search enrichment
+    let webSnippets = [];
+    try {
+      const keyTerms = selectQueryTerms(safeIntro);
+      const q = `${introType} ${keyTerms.join(' ')}`.slice(0, 240);
+      webSnippets = await searchWeb({ query: q, maxResults: 6 }).catch(() => []);
+    } catch {}
+
+    // Generate auto keywords
+    const detailed = await generateAutoKeywords({ introText: safeIntro, introType, webSnippets });
+    const keywords = Array.from(new Set(detailed.map(k => String(k.term || '').toLowerCase().trim()))).filter(Boolean).slice(0, 30);
+
+    // Persist on RFP
+    rfp.keywords = keywords;
+    rfp.keywordDetails = detailed;
+    rfp.keywordSources = {
+      provider: webSnippets.length ? 'tavily' : 'none',
+      urls: webSnippets.slice(0,3).map(s => s.url).filter(Boolean),
+      createdAt: new Date(),
+    };
+
+    // surface keywords onto requirements
+    rfp.parsedRequirements = (rfp.parsedRequirements || []).map(r => ({
+      ... (r.toObject ? r.toObject() : r),
+      keywords,
+    }));
+
+    const { accuracy, missingItems } = computeAccuracyAndMissing(rfp.parsedRequirements, keywords);
+    rfp.accuracy = accuracy;
+    rfp.missingItems = missingItems;
+
+    await rfp.save();
+
+    const result = { rfp, keywords, sources: rfp.keywordSources };
+    autoKwCache.set(String(rfp._id), { at: Date.now(), result });
+    res.json(result);
+  } catch (err) {
+    console.error('Auto-keywords error:', err?.message);
+    res.status(500).json({ error: 'Failed to generate auto-keywords.' });
+  }
+});
+
+function selectQueryTerms(s){
+  const t = String(s || '').toLowerCase();
+  const tokens = t.replace(/[^a-z0-9\s\-]/g, ' ').split(/\s+/).filter(w => w.length > 3);
+  const stop = new Set(['the','and','for','with','that','from','this','into','your','have','will','shall','must','should','would','could','their','about','under','were','been','being','which','while','than','then','over','such','each','only','also','because','within','without','across','between','among','after','before','during','until','again','more','most','some','any','other','same','both','very','grant','rfp','request','proposal','project','solution','vendor','contractor','provide','including','include','based','support','services','service','deliver','delivery','plan','plans','approach','section','page','pages']);
+  const freq = new Map();
+  for (const w of tokens){ if (!stop.has(w)) freq.set(w, (freq.get(w)||0)+1); }
+  return Array.from(freq.entries()).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([w])=>w);
+}
 
 // Proposals: create
 app.post('/api/proposals', requireAuth, async (req, res) => {

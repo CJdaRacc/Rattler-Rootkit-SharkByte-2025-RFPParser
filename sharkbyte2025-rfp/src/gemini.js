@@ -322,6 +322,62 @@ REDACTED_RFP_EXCERPT:\n${rfpText.slice(0, 3000)}\n`;
   return out;
 }
 
+export async function generateAutoKeywords({ introText = '', introType = 'unknown', webSnippets = [] }) {
+  const redactedIntro = String(introText || '').slice(0, 6000);
+  const webBundle = Array.isArray(webSnippets) ? webSnippets.slice(0, 6) : [];
+  const webTxt = webBundle.map((s, i) => `#${i+1} ${s.title}\n${s.snippet}`).join('\n---\n');
+
+  const prompt = `You analyze a redacted Request for Proposal (RFP) introduction and, if provided, recent public web snippets. Your task is to infer the domain, scope, and intent and propose 12-30 relevant keywords and short keyphrases that a vendor would use to align their proposal and search for similar work. Do NOT rely on any user-provided goals; use only the RFP intro and optional public context. Prefer multi-word phrases when appropriate. Include synonyms where valuable. Avoid overly generic words like "project", "solution", "team".
+
+Strict JSON only. Return: { "keywords": [{ "term": string, "weight": 0-1 }], "notes": string }
+- Terms must be lowercase.
+- Weights indicate relevance and specificity (omit or set 0.5 if uncertain).
+- No explanations outside JSON.
+
+intro_type: ${introType}
+RFP_INTRO (redacted, truncated):\n${redactedIntro}\n
+PUBLIC_WEB_SNIPPETS (optional):\n${webTxt}`;
+
+  let text = '';
+  try {
+    text = await generateTextWithFallback(prompt);
+  } catch (e) {
+    // fall through to deterministic fallback
+  }
+  // Try parse JSON with keywords array
+  if (text) {
+    try {
+      const start = text.indexOf('{');
+      const end = text.lastIndexOf('}');
+      if (start !== -1 && end !== -1) {
+        const obj = JSON.parse(text.slice(start, end + 1));
+        const arr = Array.isArray(obj.keywords) ? obj.keywords : [];
+        const cleaned = arr.map(k => {
+          if (typeof k === 'string') return { term: k };
+          return { term: String(k.term || '').toLowerCase().trim(), weight: typeof k.weight === 'number' ? Math.max(0, Math.min(1, k.weight)) : undefined };
+        }).filter(x => x.term && x.term.length > 2);
+        const uniq = Array.from(new Map(cleaned.map(k => [k.term, k])).values()).slice(0, 30);
+        if (uniq.length) return uniq;
+      }
+    } catch {}
+  }
+  // Deterministic fallback: extract noun-like terms by frequency from intro + web snippets
+  const textPool = (redactedIntro + '\n' + webBundle.map(s => s.title + ' ' + s.snippet).join('\n')).toLowerCase();
+  const words = textPool
+    .replace(/[^a-z0-9\s\-]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 3 && !STOP_WORDS.has(w));
+  const freq = new Map();
+  for (const w of words) freq.set(w, (freq.get(w) || 0) + 1);
+  const top = Array.from(freq.entries())
+    .sort((a,b) => b[1]-a[1])
+    .slice(0, 40)
+    .map(([term, count]) => ({ term, weight: Math.min(1, count / Math.max(3, words.length/100)) }));
+  return top.slice(0, 20);
+}
+
+const STOP_WORDS = new Set(['the','and','for','with','that','from','this','into','your','have','will','shall','must','should','would','could','their','about','under','were','been','being','which','while','than','then','over','such','each','only','also','because','within','without','across','between','among','after','before','during','until','again','more','most','some','any','other','same','both','very','onto','ours','ourselves','themselves','himself','herself','itself','please','grant','rfp','request','proposal','program','project','solution','vendor','contractor','provide','including','include','based','support','services','service','deliver','delivery','plan','plans','approach','section','section','page','pages','appendix','attachment','requirements','requirement','shall','herein','thereof','therein']);
+
 export async function generateTemplateFromEssentials({ essentials = {} }) {
   const prompt = `Create a half-complete grant proposal template filled from the provided essentials. Keep language professional and concise. Return ONLY JSON with keys: cover, executive_summary, project_description { goals, scope, timeline }, budget { total, narrative }, capacity, evaluation, outcomes, compliance_submission { submission_format, due_dates, attachments }.
 

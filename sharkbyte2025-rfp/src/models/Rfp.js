@@ -29,8 +29,14 @@ const RfpSchema = new mongoose.Schema({
   uploadMeta: { type: mongoose.Schema.Types.Mixed },
   extractedText: { type: String },
   extractedTextHash: { type: String },
+  // Intro detection for auto-keywords
+  introType: { type: String },
+  introText: { type: String },
   parsedRequirements: { type: [RequirementSchema], default: [] },
   keywords: { type: [String], default: [] },
+  // Optional detailed keyword objects
+  keywordDetails: { type: [mongoose.Schema.Types.Mixed], default: [] },
+  keywordSources: { type: mongoose.Schema.Types.Mixed },
   accuracy: { type: Number, default: 0 },
   missingItems: { type: [String], default: [] },
   keywordSuggestions: { type: [KeywordSuggestionSchema], default: [] },
