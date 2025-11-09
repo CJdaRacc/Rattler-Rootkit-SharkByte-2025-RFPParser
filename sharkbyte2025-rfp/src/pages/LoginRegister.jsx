@@ -34,7 +34,10 @@ export default function LoginRegister({ onAuthed }){
     <div className="min-h-screen flex flex-col items-center justify-center py-10">
       <WhiteHouseLogo className="w-16 h-16 mb-6 text-brand-700 dark:text-brand-300" />
       <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-4">{mode === 'login' ? 'Login' : 'Register'}</h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">{mode === 'login' ? 'Login' : 'Register'}</h2>
+          <a href="/" className="text-sm text-slate-600 hover:text-brand-700 dark:text-slate-300 dark:hover:text-brand-300">Back to Home</a>
+        </div>
         {error && <div className="text-red-700 dark:text-red-400 mb-3 text-sm">{error}</div>}
         <form onSubmit={submit} className="space-y-3">
           {mode === 'register' && (

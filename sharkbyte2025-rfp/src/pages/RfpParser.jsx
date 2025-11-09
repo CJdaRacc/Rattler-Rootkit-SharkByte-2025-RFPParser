@@ -42,78 +42,79 @@ export default function RfpParser(){
   const missing = rfp?.missingItems || [];
 
   return (
-    <div className="min-h-[70vh] flex justify-center">
-      <div className="w-full max-w-6xl mx-auto px-4">
-        <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-4">RFP Parser</h2>
-      {error && <div style={{color:'#b91c1c', marginBottom:8}}>{error}</div>}
+    <div>
+      {error && <div className="status" style={{color:'#b91c1c'}}>{error}</div>}
 
-      <form onSubmit={onUpload} style={{display:'flex', gap:8, alignItems:'center'}}>
-        <input type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={e=>setFile(e.target.files?.[0]||null)} />
-        <button type="submit" disabled={!file || uploading}>{uploading ? 'Uploading...' : 'Upload & Analyze'}</button>
-      </form>
+      <div className="card">
+        <h2>Upload RFP</h2>
+        <form onSubmit={onUpload}>
+          <input type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={e=>setFile(e.target.files?.[0]||null)} />
+          <div className="actions" style={{marginTop:8}}>
+            <button type="submit" disabled={!file || uploading}>{uploading ? 'Uploading...' : 'Upload & Analyze'}</button>
+          </div>
+        </form>
+      </div>
 
       {rfp && (
-        <div style={{marginTop:16}}>
-          <div style={{display:'flex', gap:16, alignItems:'center', flexWrap:'wrap'}}>
-            <div><strong>File:</strong> {rfp.original_filename} <em>({rfp.docType})</em></div>
-            <div><strong>Accuracy:</strong> {rfp.accuracy || 0}%</div>
-            <div><strong>Missing:</strong> {missing.join(', ') || '—'}</div>
+        <>
+          <div className="card">
+            <div className="status">
+              <strong>File:</strong> {rfp.original_filename} <em>({rfp.docType})</em> · <strong>Accuracy:</strong> {rfp.accuracy || 0}% · <strong>Missing:</strong> {missing.join(', ') || '—'}
+            </div>
           </div>
 
-          <section style={{marginTop:12}}>
+          <div className="card">
             <h3>Project Context for Keywords</h3>
-            <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:8}}>
-              <label>Project Goal<textarea rows={4} value={projectGoal} onChange={e=>setProjectGoal(e.target.value)} /></label>
-              <label>Summary<textarea rows={4} value={summary} onChange={e=>setSummary(e.target.value)} /></label>
+            <label>Project Goal<textarea rows={4} value={projectGoal} onChange={e=>setProjectGoal(e.target.value)} /></label>
+            <label>Summary<textarea rows={4} value={summary} onChange={e=>setSummary(e.target.value)} /></label>
+            <button onClick={generateKeywords} disabled={!rfp?._id} style={{marginTop:8}}>Generate Keywords (Gemini)</button>
+            <div className="pillbox">
+              {keywords.map(k => <span key={k} className="pill">{k}</span>)}
             </div>
-            <button onClick={generateKeywords} style={{marginTop:8}}>Generate Keywords (Gemini)</button>
-            <div style={{display:'flex', gap:6, flexWrap:'wrap', marginTop:8}}>
-              {keywords.map(k => <span key={k} style={{background:'#0ea5e9', color:'#fff', padding:'4px 8px', borderRadius:999, fontSize:12}}>{k}</span>)}
-            </div>
-          </section>
+          </div>
 
-          <section style={{marginTop:16, display:'grid', gridTemplateColumns:'1fr 1fr', gap:12}}>
-            <div>
-              <h3>Parsed Requirements</h3>
-              <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))', gap:8}}>
-                {(rfp.parsedRequirements||[]).map(req => (
-                  <div key={req.id} style={{border:'1px solid #e2e8f0', borderRadius:8, padding:8}}>
-                    <div style={{display:'flex', gap:6, alignItems:'center', marginBottom:6, flexWrap:'wrap'}}>
-                      <span style={{fontWeight:600}}>{req.id}</span>
-                      <span style={{fontWeight:600, flex:1}}>{req.title}</span>
-                      <span style={{background:'#e2e8f0', borderRadius:6, padding:'2px 6px'}}>{req.category}</span>
-                      <span className={`prio-${req.priority}`} style={{color:'#fff', borderRadius:6, padding:'2px 6px', background: req.priority==='high'?'#ef4444':req.priority==='medium'?'#f59e0b':'#10b981'}}>{req.priority}</span>
-                    </div>
-                    <div style={{fontSize:13, color:'#334155'}}>
-                      {highlight(req.text_snippet || '', keywords)}
-                    </div>
-                    <div style={{fontSize:12, color:'#64748b', marginTop:6}}><strong>Due:</strong> {(req.due_dates||[]).join('; ')||'—'}</div>
-                    <div style={{fontSize:12, color:'#64748b'}}><strong>Evidence:</strong> {(req.evidence_required||[]).join(', ')||'—'}</div>
+          <div className="card">
+            <h2>Parsed Requirements</h2>
+            <div className="requirements">
+              {(rfp.parsedRequirements||[]).map(req => (
+                <div key={req.id} className="req-item">
+                  <div className="req-head">
+                    <span className="req-id">{req.id}</span>
+                    <span className="req-title">{req.title}</span>
+                    <span className="req-cat">{req.category}</span>
+                    <span className={`req-prio prio-${req.priority}`}>{req.priority}</span>
                   </div>
-                ))}
-              </div>
+                  <div className="req-body">
+                    <div className="snippet">{highlight(req.text_snippet || '', keywords)}</div>
+                    <div><strong>Due:</strong> {(req.due_dates||[]).join('; ')||'—'}</div>
+                    <div><strong>Evidence:</strong> {(req.evidence_required||[]).join(', ')||'—'}</div>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div>
-              <h3>Missing Items</h3>
-              {(missing.length === 0) ? <div>None 🎉</div> : (
-                <>
-                  <ul>
-                    {missing.map(m => (
-                      <li key={m} style={{marginBottom:8}}>
-                        <strong>{m}:</strong>
-                        <div style={{fontSize:13, color:'#334155'}}>{suggestions[m] || '—'}</div>
-                      </li>
-                    ))}
-                  </ul>
-                  <button onClick={loadSuggestions}>Get Suggestions (Gemini)</button>
-                </>
-              )}
-            </div>
-          </section>
-        </div>
+          </div>
+
+          <div className="card">
+            <h3>Missing Items</h3>
+            {(missing.length === 0) ? <div>None 🎉</div> : (
+              <>
+                <ul>
+                  {missing.map(m => (
+                    <li key={m} style={{marginBottom:12}}>
+                      <div style={{display:'flex', alignItems:'baseline', gap:8}}>
+                        <strong style={{minWidth:180}}>{m}:</strong>
+                        {renderSuggestionBlock(suggestions[m], rfp?.parsedRequirements || [])}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <button onClick={loadSuggestions}>Get Suggestions (Gemini)</button>
+              </>
+            )}
+          </div>
+        </>
       )}
-        </div>
-      </div>
+    </div>
   );
 }
 
@@ -152,4 +153,49 @@ function tokenizeForHighlight(text, kws){
   }
   if (pos < text.length) out.push({ text: text.slice(pos) });
   return out;
+}
+
+
+// Helper to render a rich suggestion block that is document-specific
+function renderSuggestionBlock(s, parsedReqs){
+  if (!s) return <div style={{fontSize:13, color:'#334155'}}>—</div>;
+  // Backward compatibility: if suggestion is a simple string
+  if (typeof s === 'string') return <div style={{fontSize:13, color:'#334155'}}>{s}</div>;
+
+  const rel = Array.isArray(s.related_requirements) ? s.related_requirements : [];
+  const reqMap = new Map((parsedReqs||[]).map(r => [String(r.id), r]));
+
+  return (
+    <div style={{display:'grid', gap:6, flex:1}}>
+      {s.summary && (
+        <div style={{fontSize:13, color:'#334155'}}>{s.summary}</div>
+      )}
+      {Array.isArray(s.actions) && s.actions.length > 0 && (
+        <ul style={{margin:0, paddingLeft:18, color:'#0f172a'}}>
+          {s.actions.map((a,i) => <li key={i} style={{fontSize:13}}>{a}</li>)}
+        </ul>
+      )}
+      {rel.length > 0 && (
+        <div style={{display:'flex', flexWrap:'wrap', gap:6}}>
+          <span style={{fontSize:12, color:'#64748b'}}>Related in your RFP:</span>
+          {rel.map((r,i) => {
+            const full = reqMap.get(String(r.id));
+            const label = String(r.id);
+            const sub = full?.text_snippet || '';
+            const due = r.due_date || (full?.due_dates && full.due_dates[0]) || '';
+            const ev = r.evidence || (full?.evidence_required && full.evidence_required[0]) || '';
+            const title = [full?.title, due && `Due: ${due}`, ev && `Evidence: ${ev}`].filter(Boolean).join(' • ');
+            return (
+              <span key={i} title={title} style={{background:'#eef2ff', color:'#1e293b', padding:'2px 8px', borderRadius:999, fontSize:12}}>
+                {label}
+              </span>
+            );
+          })}
+        </div>
+      )}
+      {typeof s.confidence === 'number' && (
+        <div style={{fontSize:11, color:'#64748b'}}>Confidence: {(Math.round(s.confidence * 100))}%</div>
+      )}
+    </div>
+  );
 }

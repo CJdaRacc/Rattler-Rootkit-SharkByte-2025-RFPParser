@@ -67,7 +67,7 @@ if (MONGO_URI) {
 }
 
 const __dirnameResolved = path.resolve();
-app.use(express.static(path.join(__dirnameResolved, 'public')));
+// Static file serving removed to keep server API-only. UI is served by Vite (dev) or a separate static host.
 
 // Multer in-memory storage for uploaded files
 const storage = multer.memoryStorage();
@@ -415,16 +415,59 @@ app.put('/api/rfps/:id/tags', requireAuth, async (req, res) => {
   }
 });
 
-// Suggestions for missing items via Gemini
+// Suggestions for missing items via Gemini (document-anchored)
 app.post('/api/rfps/:id/suggestions', requireAuth, async (req, res) => {
   try {
-    const rfp = await Rfp.findOne({ _id: req.params.id, userId: req.user._id });
+    const rfp = await Rfp.findOne({ _id: req.params.id, userId: req.user._id }).lean();
     if (!rfp) return res.status(404).json({ error: 'RFP not found' });
     const missing = rfp.missingItems || [];
     if (missing.length === 0) return res.json({ suggestions: {} });
+
+    // Build compact parsed summary to provide concrete anchors for Gemini
+    const parsedSummary = (rfp.parsedRequirements || []).slice(0, 120).map(r => ({
+      id: r.id,
+      title: r.title,
+      category: r.category,
+      due_date: Array.isArray(r.due_dates) && r.due_dates.length ? r.due_dates[0] : undefined,
+      evidence: Array.isArray(r.evidence_required) && r.evidence_required.length ? r.evidence_required.slice(0, 3) : [],
+      snippet: (r.text_snippet || '').slice(0, 240)
+    }));
+
+    // Load GOOD RFP rubric (with inline fallback)
+    let rubric = null;
+    try {
+      const p = path.join(process.cwd(), 'samples', 'good-rfp-rubric.json');
+      if (fs.existsSync(p)) {
+        rubric = JSON.parse(fs.readFileSync(p, 'utf8'));
+      }
+    } catch {}
+    if (!rubric) {
+      rubric = {
+        sections: [
+          { key: 'Eligibility', elements: ['eligibility criteria', 'applicant qualifications', 'disqualifiers'] },
+          { key: 'Executive Summary', elements: ['purpose', 'funding amount', 'beneficiaries'] },
+          { key: 'Problem/Needs', elements: ['needs statement', 'evidence of need'] },
+          { key: 'Goals & Objectives', elements: ['SMART goals', 'measurable objectives'] },
+          { key: 'Scope/Activities', elements: ['work plan', 'deliverables', 'milestones'] },
+          { key: 'Timeline/Milestones', elements: ['start/end dates', 'milestone dates'] },
+          { key: 'Budget & Narrative', elements: ['line items', 'justification', 'caps/limits'] },
+          { key: 'Organizational Capacity', elements: ['team roles', 'experience', 'governance'] },
+          { key: 'Evaluation Plan', elements: ['KPIs', 'data collection', 'reporting cadence'] },
+          { key: 'Outcomes/Impact', elements: ['outputs', 'outcomes', 'impact metrics'] },
+          { key: 'Compliance/Submission', elements: ['format', 'deadlines', 'checklist'] },
+          { key: 'Risk & Mitigation', elements: ['risks', 'mitigation steps'] }
+        ]
+      };
+    }
+
     const redacted = redactSensitive(rfp.extractedText || '');
     const { generateMissingSuggestions } = await import('./src/gemini.js');
-    const suggestions = await generateMissingSuggestions({ missingCategories: missing, rfpText: redacted });
+    const suggestions = await generateMissingSuggestions({
+      missingCategories: missing,
+      rfpText: redacted,
+      parsedSummary,
+      rubric
+    });
     res.json({ suggestions });
   } catch (e) {
     console.error('Suggestions error:', e?.message);
@@ -491,9 +534,17 @@ app.post('/api/export', requireAuth, async (req, res) => {
   }
 });
 
-// Fallback to index.html for root
+// API-only root guidance
 app.get('/', (_req, res) => {
-  res.sendFile(path.join(__dirnameResolved, 'index.html'));
+  res.json({ ok: true, message: 'SharkByte RFP API server running. Use the Vite client on http://localhost:5173. Health: /api/health' });
+});
+
+// 404 for non-API routes (keep API errors handled by each route)
+app.use((req, res, next) => {
+  if (!req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'Not Found', hint: 'This server only exposes /api/* endpoints. Run the UI via Vite on http://localhost:5173.' });
+  }
+  next();
 });
 
 function startServer() {

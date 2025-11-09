@@ -6,7 +6,9 @@ import LoginRegister from './pages/LoginRegister.jsx';
 import Profile from './pages/Profile.jsx';
 import RfpParser from './pages/RfpParser.jsx';
 import Templating from './pages/Templating.jsx';
+import Home from './pages/Home.jsx';
 import WhiteHouseLogo from './components/WhiteHouseLogo.jsx';
+import HackathonLayout from './components/HackathonLayout.jsx';
 
 function App(){
   const [me, setMe] = useState(null);
@@ -14,6 +16,7 @@ function App(){
   const navigate = useNavigate();
   const location = useLocation();
   const isAuthPage = location.pathname === '/login';
+  const isHackathon = location.pathname.startsWith('/rfp') || location.pathname.startsWith('/templating');
 
   useEffect(() => {
     (async () => {
@@ -34,6 +37,7 @@ function App(){
 
   const NavLinks = () => (
     <div className="flex items-center gap-4">
+      <NavLink to="/" label="Home" current={location.pathname === '/'} />
       <NavLink to="/profile" label="Profile" current={location.pathname.startsWith('/profile')} />
       <NavLink to="/templating" label="Templating" current={location.pathname.startsWith('/templating')} />
       <NavLink to="/rfp" label="RFP Parser" current={location.pathname.startsWith('/rfp')} />
@@ -42,8 +46,8 @@ function App(){
 
   return (
     <div className="min-h-screen relative">
-      {/* Watermark background (hidden on auth page) */}
-      {!isAuthPage && (
+      {/* Watermark background (hidden on auth or hackathon pages to keep theme clean) */}
+      {!isAuthPage && !isHackathon && (
         <div aria-hidden className="pointer-events-none absolute inset-0 select-none [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]">
           <div className="absolute -top-24 right-8 opacity-5 dark:opacity-10">
             <WhiteHouseLogo className="w-64 h-64" />
@@ -51,7 +55,7 @@ function App(){
         </div>
       )}
 
-      {/* Navbar (hidden on auth page) */}
+      {/* Navbar (hidden on auth page only) */}
       {!isAuthPage && (
         <header className="sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur">
           <div className="container-app h-14 flex items-center justify-between">
@@ -71,7 +75,7 @@ function App(){
                   </button>
                 </div>
               ) : (
-                <Link to="/rfp" className="btn btn-primary">Login / Register</Link>
+                <Link to="/login" className="btn btn-primary">Login / Register</Link>
               )}
               <button className="md:hidden p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Open menu" aria-expanded={mobileOpen} onClick={() => setMobileOpen(v => !v)}>
                 <Menu className="w-6 h-6" />
@@ -91,17 +95,25 @@ function App(){
       )}
 
       {/* Main content */}
-      <main className="container-app py-6">
+      <main className={isHackathon ? '' : 'container-app py-6'}>
         <Routes>
-          <Route path="/login" element={me ? <Navigate to="/rfp" replace /> : <LoginRegister onAuthed={setMe} />} />
+          <Route path="/" element={<Home me={me} />} />
+          <Route path="/login" element={me ? <Navigate to="/" replace /> : <LoginRegister onAuthed={setMe} />} />
           <Route path="/profile" element={<RequireAuth me={me}><Profile me={me} setMe={setMe} /></RequireAuth>} />
-          <Route path="/templating" element={<RequireAuth me={me}><Templating me={me} /></RequireAuth>} />
-          <Route path="/rfp" element={<RequireAuth me={me}><RfpParser me={me} /></RequireAuth>} />
+          <Route path="/templating" element={<RequireAuth me={me}><HackathonLayout><Templating me={me} /></HackathonLayout></RequireAuth>} />
+          <Route path="/rfp" element={<RequireAuth me={me}><HackathonLayout><RfpParser me={me} /></HackathonLayout></RequireAuth>} />
           <Route path="*" element={<HomeRedirect me={me} />} />
         </Routes>
       </main>
     </div>
   );
+}
+
+function HackathonWrapper({ children }){
+  // Simple wrapper to render pages inside the hackathon-themed layout
+  const Wrapper = require('./components/HackathonLayout.jsx');
+  const Default = Wrapper && Wrapper.default ? Wrapper.default : null;
+  return Default ? <Default>{children}</Default> : children;
 }
 
 function NavLink({ to, label, current }){

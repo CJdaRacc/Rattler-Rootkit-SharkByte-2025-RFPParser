@@ -7,18 +7,22 @@
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
+
   <header>
-    <h1>RFP Analyzer & Proposal Template</h1>
-    <p class="subtitle">Generate structured requirements from an RFP and prepare a proposal draft template.</p>
+    <div class="container">
+      <h1>RFP Analyzer & Proposal Template</h1>
+      <p class="subtitle">Generate structured requirements from an RFP and prepare a proposal draft template.</p>
+    </div>
   </header>
 
   <main>
-    <nav class="tabs">
-      <button class="tab active" data-tab="analyze">Analyze RFP</button>
-      <button class="tab" data-tab="template">Templating</button>
-    </nav>
+    <div class="container">
+      <nav class="tabs">
+        <button class="tab active" data-tab="analyze">Analyze RFP</button>
+        <button class="tab" data-tab="template">Templating</button>
+      </nav>
 
-    <section id="analyze" class="tab-panel active">
+      <section id="analyze" class="tab-panel active">
       <div class="card">
         <h2>Upload RFP PDF</h2>
         <form id="analyze-form">
@@ -120,10 +124,13 @@
         </form>
       </div>
     </section>
+    </div>
   </main>
 
   <footer>
-    <small>Tip: Use the GOOD RFP sample as a guide when reviewing parsed requirements.</small>
+    <div class="container">
+      <small>Tip: Define Needs, Not Solutions: Clearly state what your business needs are (e.g., "17 workflows across 3 workstreams") but avoid being overly prescriptive on the technical solution (e.g., don't insist on a "green button")..</small>
+    </div>
   </footer>
 
   <script src="/app.js"></script>

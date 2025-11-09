@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../lib/api.js';
 
 export default function Profile({ me, setMe }){
+  const navigate = useNavigate();
   const [tags, setTags] = useState(me?.tags || []);
   const [businesses, setBusinesses] = useState(me?.businesses || []);
   const [companyName, setCompanyName] = useState(me?.companyName || '');
@@ -48,12 +50,26 @@ export default function Profile({ me, setMe }){
     } catch {}
   }
 
+  async function logout(){
+    try { await api('/api/auth/logout', { method: 'POST' }); } catch {}
+    setMe && setMe(null);
+    navigate('/');
+  }
+
   return (
     <div className="min-h-[70vh] flex justify-center">
       <div className="w-full max-w-6xl mx-auto px-4">
-        <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-1">Profile</h2>
-        <div style={{color:'#475569'}}>{name}</div>
-        <div style={{color:'#64748b', marginBottom:12}}>{companyName}</div>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-1">Profile</h2>
+            <div style={{color:'#475569'}}>{name}</div>
+            <div style={{color:'#64748b', marginBottom:12}}>{companyName}</div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link to="/" className="btn btn-secondary">Home</Link>
+            <button className="btn btn-primary" onClick={logout}>Logout</button>
+          </div>
+        </div>
 
         {error && <div style={{color:'#b91c1c'}}>{error}</div>}
 

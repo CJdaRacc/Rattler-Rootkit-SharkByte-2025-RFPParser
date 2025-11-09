@@ -1,0 +1,16 @@
+{
+  "sections": [
+    {"key": "Eligibility", "elements": ["eligibility criteria", "applicant qualifications", "disqualifiers"]},
+    {"key": "Executive Summary", "elements": ["purpose", "funding amount", "beneficiaries"]},
+    {"key": "Problem/Needs", "elements": ["needs statement", "evidence of need"]},
+    {"key": "Goals & Objectives", "elements": ["SMART goals", "measurable objectives"]},
+    {"key": "Scope/Activities", "elements": ["work plan", "deliverables", "milestones"]},
+    {"key": "Timeline/Milestones", "elements": ["start/end dates", "milestone dates"]},
+    {"key": "Budget & Narrative", "elements": ["line items", "justification", "caps/limits"]},
+    {"key": "Organizational Capacity", "elements": ["team roles", "experience", "governance"]},
+    {"key": "Evaluation Plan", "elements": ["KPIs", "data collection", "reporting cadence"]},
+    {"key": "Outcomes/Impact", "elements": ["outputs", "outcomes", "impact metrics"]},
+    {"key": "Compliance/Submission", "elements": ["format", "deadlines", "checklist"]},
+    {"key": "Risk & Mitigation", "elements": ["risks", "mitigation steps"]}
+  ]
+}

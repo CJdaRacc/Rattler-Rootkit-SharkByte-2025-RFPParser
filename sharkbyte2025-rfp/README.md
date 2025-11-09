@@ -3,7 +3,7 @@
 This project is now a MERN-style app:
 - MongoDB for persistence (RFPs, proposals, keyword history)
 - Express server for API endpoints
-- React client (Vite) for UI; a minimal static UI also exists under `public/`
+- React client (Vite) for UI. A minimal static UI also exists under `public/` for reference, but the Node server no longer serves static pages.
 - Node.js runtime
 
 ## Features
@@ -18,7 +18,7 @@ This project is now a MERN-style app:
    - `CORS_ORIGIN=http://localhost:5173` (if using separate Vite client) or `http://localhost:3000` if serving static `public/`
    - `MONGO_URI=mongodb://127.0.0.1:27017/sharkbyte_rfp` (or your Atlas URI)
    - `GEMINI_API_KEY=...`
-   - Optional: `GEMINI_MODEL=gemini-1.5-flash`
+   - Optional: `GEMINI_MODEL=gemini-1.5-flash-002`
 
 2. Install dependencies:
    ```
@@ -32,10 +32,10 @@ This project is now a MERN-style app:
    - Server: http://localhost:3000
    - Client (Vite): http://localhost:5173
 
-   Alternatively, you can just run the server and use the static `public/` UI at port 3000:
+   Note: The Node server is API-only and no longer serves static files. Always run the Vite client for the UI in development:
    ```
-   npm run server:dev
-   # then open http://localhost:3000
+   npm run client
+   # open http://localhost:5173
    ```
 
 ## API
@@ -68,3 +68,26 @@ This project is now a MERN-style app:
 
 ## Samples
 - See `samples/` for example RFPs including the GOOD RFP and `RFP Template.pdf`.
+
+
+## Category-specific, document-aware suggestions
+The backend generates per-category suggestions for missing sections using Google Gemini and a GOOD RFP rubric. It now includes:
+- Canonical category normalization (e.g., Timeline/Milestones → Timeline; Submission|Compliance → Submission & Compliance).
+- Strict prompting that lists the exact categories to return.
+- Post-processing relevance filter to drop off-topic actions and cap to 2–6 on-topic actions.
+- Curated fallbacks per category when the model is unavailable.
+- Anchoring to your parsed requirements via `related_requirements` IDs.
+
+Tuning knobs:
+- Edit `CATEGORY_KEYWORDS` and `CATEGORY_FALLBACKS` inside `src/gemini.js` to adjust filtering and fallback messaging.
+- Adjust the rubric in `samples/good-rfp-rubric.json` to influence guidance.
+
+Debugging (dev only):
+- Set `DEBUG_SUGGESTIONS=1` in `.env` and restart the server to log model selection, prompt/response sizes, and raw model text (first 600 chars) alongside post-processed output.
+
+Verification checklist:
+1. Start backend and client: `npm run dev`.
+2. Upload an RFP at `/rfp`.
+3. Click “Get Suggestions (Gemini)”.
+4. Confirm each missing category displays specific, on-topic actions (e.g., Evaluation → KPIs/baselines/data/cadence; Timeline → milestones/dates/dependencies; Submission & Compliance → portal/format/deadlines/checklists).
+5. Temporarily unset `GEMINI_API_KEY` to force curated fallbacks and verify they remain on-topic.
