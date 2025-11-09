@@ -71,6 +71,112 @@ if (MONGO_URI) {
 const __dirnameResolved = path.resolve();
 // Static file serving removed to keep server API-only. UI is served by Vite (dev) or a separate static host.
 
+// Reference guide (20-09aa) — load and cache in memory when enabled via REF_GUIDE
+const REF_GUIDE = String(process.env.REF_GUIDE || '').toLowerCase();
+let REF_PROFILE = null; // { sections: [{ key, elements: [] }], _source: '20-09aa' }
+let REF_PROFILE_READY = false;
+
+async function loadReferenceProfile() {
+  if (REF_PROFILE_READY) return REF_PROFILE;
+  try {
+    // If REF_GUIDE is explicitly set to a different profile, skip.
+    // If empty or set to case_mgmt_20-09aa, attempt to auto-load the 20-09aa reference.
+    if (REF_GUIDE && REF_GUIDE !== 'case_mgmt_20-09aa') {
+      REF_PROFILE_READY = true; // not enabled; treat as ready (null)
+      return null;
+    }
+    const refPath = path.join(process.cwd(), 'samples', '20-09aa-rfp-for-case-management-software-final.pdf');
+    if (!fs.existsSync(refPath)) {
+      console.warn('[REF_GUIDE] Reference PDF not found at', refPath);
+      REF_PROFILE_READY = true; return null;
+    }
+    const buf = fs.readFileSync(refPath);
+    const data = await pdfParse(buf);
+    const text = String(data.text || '');
+    // Heuristic extraction of section headings
+    const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    const heads = [];
+    const headRe = /^(?:\d+[\.)\-]\s*)?([A-Z][A-Z\s\-\/&]{3,})$/; // simple ALL-CAPS headings or numbered caps
+    for (const ln of lines) {
+      const m = ln.match(headRe);
+      if (m) heads.push(m[1].replace(/\s+/g,' ').trim());
+    }
+    const uniqHeads = Array.from(new Set(heads)).slice(0, 80);
+    // Map to canonical keys
+    function norm(h){
+      const s = h.toLowerCase();
+      if (/(instruction|submittal|submission|compliance)/.test(s)) return 'Submission & Compliance';
+      if (/(statement of work|scope|work plan|tasks|deliverables)/.test(s)) return 'Scope & Activities';
+      if (/(deliverable|milestone|schedule|timeline)/.test(s)) return 'Timeline';
+      if (/(evaluation|award|criteria|scoring)/.test(s)) return 'Evaluation';
+      if (/(budget|pricing|cost)/.test(s)) return 'Budget';
+      if (/(eligibility|qualification|vendor)/.test(s)) return 'Eligibility';
+      if (/(executive summary|overview|background|purpose|introduction)/.test(s)) return 'Executive Summary';
+      if (/(goals|objectives)/.test(s)) return 'Goals & Objectives';
+      if (/(organization|capacity|experience|staff)/.test(s)) return 'Organizational Capacity';
+      if (/(outcome|impact|results)/.test(s)) return 'Outcomes & Impact';
+      if (/(risk|mitigation|security|assurance)/.test(s)) return 'Risk & Mitigation';
+      if (/(terms|conditions|contract|insurance|bond)/.test(s)) return 'Terms & Conditions';
+      if (/(appendix|attachment|forms|exhibit)/.test(s)) return 'Forms & Attachments';
+      return null;
+    }
+    const canonOrder = [
+      'Executive Summary','Eligibility','Goals & Objectives','Scope & Activities','Timeline','Budget','Organizational Capacity','Evaluation','Outcomes & Impact','Submission & Compliance','Terms & Conditions','Forms & Attachments'
+    ];
+    const found = new Set();
+    for (const h of uniqHeads) {
+      const k = norm(h);
+      if (k) found.add(k);
+    }
+    const sections = Array.from(found.size ? found : new Set(canonOrder))
+      .filter(Boolean)
+      .sort((a,b)=> canonOrder.indexOf(a)-canonOrder.indexOf(b))
+      .map(key => ({ key, elements: defaultElementsFor(key) }));
+
+    REF_PROFILE = { sections, _source: '20-09aa' };
+    REF_PROFILE_READY = true;
+    console.log(`[REF_GUIDE] Loaded 20-09aa reference: ${data.numpages||'?'} pages, sections=`, sections.map(s=>s.key).join(', '));
+  } catch (e) {
+    console.warn('[REF_GUIDE] Failed to load reference:', e?.message);
+    REF_PROFILE_READY = true; REF_PROFILE = null;
+  }
+  return REF_PROFILE;
+}
+
+function defaultElementsFor(key){
+  switch (key) {
+    case 'Submission & Compliance':
+      return ['due date/time & timezone','submission portal/email','format & filename rules','UEI/SAM registrations','required signatures/forms','attachments checklist','page/word limits'];
+    case 'Evaluation':
+      return ['evaluation criteria','weights/scoring','review process','tie-break rules'];
+    case 'Timeline':
+      return ['start/end dates','milestones','dependencies','phases'];
+    case 'Budget':
+      return ['line items','caps/allowances','match/cost-share','narrative'];
+    case 'Scope & Activities':
+      return ['workstreams','deliverables','acceptance criteria'];
+    case 'Goals & Objectives':
+      return ['SMART objectives','outcomes linkage'];
+    case 'Organizational Capacity':
+      return ['key staff roles','experience','governance'];
+    case 'Outcomes & Impact':
+      return ['outputs vs outcomes','targets','impact narrative'];
+    case 'Eligibility':
+      return ['applicant qualifications','geography','disqualifiers'];
+    case 'Terms & Conditions':
+      return ['contract terms','insurance/bonding','compliance clauses'];
+    case 'Forms & Attachments':
+      return ['required forms','certifications','exhibits'];
+    case 'Executive Summary':
+      return ['purpose','beneficiaries','request'];
+    default:
+      return [];
+  }
+}
+
+// Kick off loading in background (non-blocking)
+loadReferenceProfile().catch(()=>{});
+
 // Multer in-memory storage for uploaded files
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -191,8 +297,28 @@ async function extractTextFromUpload(file) {
 }
 
 function computeAccuracyAndMissing(parsed, keywords = []) {
-  const expected = ['Eligibility','Budget','Timeline','Evaluation','Compliance','Scope','Submission','General'];
-  const presentCats = new Set(parsed.map(r => r.category));
+  // Use reference profile if loaded; otherwise fallback to legacy expected labels
+  let expected = null;
+  if (REF_PROFILE && Array.isArray(REF_PROFILE.sections) && REF_PROFILE.sections.length) {
+    expected = REF_PROFILE.sections.map(s => s.key);
+  } else {
+    expected = ['Eligibility','Budget','Timeline','Evaluation','Submission & Compliance','Scope & Activities','Organizational Capacity','Outcomes & Impact','Risk & Mitigation'];
+  }
+  // Normalize present categories to our canonical set (simple aliasing)
+  const alias = new Map([
+    ['Compliance','Submission & Compliance'],
+    ['Submission','Submission & Compliance'],
+    ['Scope','Scope & Activities'],
+    ['Scope/Activities','Scope & Activities'],
+    ['Timeline/Milestones','Timeline'],
+    ['Executive Summary','Executive Summary'],
+    ['Problem/Needs','Eligibility'],
+  ]);
+  const presentCats = new Set((parsed || []).map(r => {
+    let c = String(r.category || '').trim();
+    if (alias.has(c)) return alias.get(c);
+    return c;
+  }));
   const missing = expected.filter(c => !presentCats.has(c));
   const catScore = (presentCats.size / expected.length);
   const kwScore = (keywords.length ? 0.1 : 0); // small boost if keywords present
@@ -517,28 +643,35 @@ app.post('/api/rfps/:id/suggestions', requireAuth, async (req, res) => {
       snippet: (r.text_snippet || '').slice(0, 240)
     }));
 
-    // Load GOOD RFP rubric (with inline fallback)
+    // Prefer 20-09aa official reference profile if available; otherwise use GOOD RFP rubric
     let rubric = null;
     try {
-      const p = path.join(process.cwd(), 'samples', 'good-rfp-rubric.json');
-      if (fs.existsSync(p)) {
-        rubric = JSON.parse(fs.readFileSync(p, 'utf8'));
+      const ref = await loadReferenceProfile();
+      if (ref && Array.isArray(ref.sections) && ref.sections.length) {
+        rubric = { sections: ref.sections };
       }
     } catch {}
+    if (!rubric) {
+      try {
+        const p = path.join(process.cwd(), 'samples', 'good-rfp-rubric.json');
+        if (fs.existsSync(p)) {
+          rubric = JSON.parse(fs.readFileSync(p, 'utf8'));
+        }
+      } catch {}
+    }
     if (!rubric) {
       rubric = {
         sections: [
           { key: 'Eligibility', elements: ['eligibility criteria', 'applicant qualifications', 'disqualifiers'] },
           { key: 'Executive Summary', elements: ['purpose', 'funding amount', 'beneficiaries'] },
-          { key: 'Problem/Needs', elements: ['needs statement', 'evidence of need'] },
           { key: 'Goals & Objectives', elements: ['SMART goals', 'measurable objectives'] },
-          { key: 'Scope/Activities', elements: ['work plan', 'deliverables', 'milestones'] },
-          { key: 'Timeline/Milestones', elements: ['start/end dates', 'milestone dates'] },
-          { key: 'Budget & Narrative', elements: ['line items', 'justification', 'caps/limits'] },
+          { key: 'Scope & Activities', elements: ['work plan', 'deliverables', 'milestones'] },
+          { key: 'Timeline', elements: ['start/end dates', 'milestone dates'] },
+          { key: 'Budget', elements: ['line items', 'justification', 'caps/limits'] },
           { key: 'Organizational Capacity', elements: ['team roles', 'experience', 'governance'] },
-          { key: 'Evaluation Plan', elements: ['KPIs', 'data collection', 'reporting cadence'] },
-          { key: 'Outcomes/Impact', elements: ['outputs', 'outcomes', 'impact metrics'] },
-          { key: 'Compliance/Submission', elements: ['format', 'deadlines', 'checklist'] },
+          { key: 'Evaluation', elements: ['KPIs', 'data collection', 'reporting cadence'] },
+          { key: 'Outcomes & Impact', elements: ['outputs', 'outcomes', 'impact metrics'] },
+          { key: 'Submission & Compliance', elements: ['format', 'deadlines', 'checklist'] },
           { key: 'Risk & Mitigation', elements: ['risks', 'mitigation steps'] }
         ]
       };

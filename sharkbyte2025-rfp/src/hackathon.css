@@ -97,3 +97,22 @@
 @media (max-width: 640px){
   .sb-theme .tip-carousel.inline .tip-inner{width:100%;margin:0}
 }
+
+
+/* Small info container for Accuracy explanation */
+.sb-theme .info-note{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;margin-top:10px;color:#0f172a}
+.sb-theme .info-head{display:flex;align-items:center;gap:8px}
+.sb-theme .info-icon{font-size:14px}
+.sb-theme .info-title{font-weight:700;font-size:14px}
+.sb-theme .info-spacer{flex:1}
+.sb-theme .info-link{background:transparent;border:none;color:var(--brand);font-weight:600;cursor:pointer;padding:4px 6px;border-radius:6px}
+.sb-theme .info-link:hover{text-decoration:underline}
+.sb-theme .info-close{background:transparent;border:none;color:#334155;font-size:16px;line-height:1;padding:2px 6px;border-radius:6px;cursor:pointer}
+.sb-theme .info-close:hover{background:#e2e8f0}
+.sb-theme .info-body{margin-top:8px;font-size:13px;color:#334155}
+
+@media (max-width: 640px){
+  .sb-theme .info-note{padding:8px 10px}
+  .sb-theme .info-title{font-size:13px}
+  .sb-theme .info-body{font-size:12.5px}
+}

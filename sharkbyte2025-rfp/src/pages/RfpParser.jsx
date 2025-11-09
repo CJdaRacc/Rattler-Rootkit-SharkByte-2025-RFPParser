@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api, uploadFile } from '../lib/api.js';
 import TipCarousel from '../components/TipCarousel.jsx';
+import AccuracyInfo from '../components/AccuracyInfo.jsx';
 
 export default function RfpParser(){
   const tips = useMemo(() => [
@@ -75,6 +76,7 @@ export default function RfpParser(){
             <div className="status">
               <strong>File:</strong> {rfp.original_filename} <em>({rfp.docType})</em> · <strong>Accuracy:</strong> {rfp.accuracy || 0}% · <strong>Missing:</strong> {missing.join(', ') || '—'}
             </div>
+            <AccuracyInfo />
           </div>
 
           <div className="card">
@@ -95,7 +97,13 @@ export default function RfpParser(){
                     <span className="req-id">{req.id}</span>
                     <span className="req-title">{req.title}</span>
                     <span className="req-cat">{req.category}</span>
-                    <span className={`req-prio prio-${req.priority}`}>{req.priority}</span>
+                    <span
+                      className={`req-prio prio-${req.priority}`}
+                      title={String(req.priority).toLowerCase()==='high' ? 'High priority: must-have or compliance-critical' : String(req.priority).toLowerCase()==='medium' ? 'Medium priority: important for scoring and alignment' : 'Low priority: optional/nice-to-have'}
+                      aria-label={String(req.priority).toLowerCase()==='high' ? 'High priority: must-have or compliance-critical' : String(req.priority).toLowerCase()==='medium' ? 'Medium priority: important for scoring and alignment' : 'Low priority: optional or nice to have'}
+                    >
+                      {req.priority}
+                    </span>
                   </div>
                   <div className="req-body">
                     <div className="snippet">{highlight(req.text_snippet || '', keywords)}</div>
