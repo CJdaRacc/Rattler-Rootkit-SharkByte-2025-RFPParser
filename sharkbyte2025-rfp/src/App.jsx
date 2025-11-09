@@ -46,8 +46,8 @@ function App(){
 
   return (
     <div className="min-h-screen relative">
-      {/* Watermark background (hidden on auth or hackathon pages to keep theme clean) */}
-      {!isAuthPage && !isHackathon && (
+      {/* Watermark background (hidden when unauthenticated, on auth page, or hackathon pages) */}
+      {me && !isAuthPage && !isHackathon && (
         <div aria-hidden className="pointer-events-none absolute inset-0 select-none [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]">
           <div className="absolute -top-24 right-8 opacity-5 dark:opacity-10">
             <WhiteHouseLogo className="w-64 h-64" />
@@ -97,7 +97,7 @@ function App(){
       {/* Main content */}
       <main className={isHackathon ? '' : 'container-app py-6'}>
         <Routes>
-          <Route path="/" element={<Home me={me} />} />
+          <Route path="/" element={<RequireAuth me={me}><Home me={me} /></RequireAuth>} />
           <Route path="/login" element={me ? <Navigate to="/" replace /> : <LoginRegister onAuthed={setMe} />} />
           <Route path="/profile" element={<RequireAuth me={me}><Profile me={me} setMe={setMe} /></RequireAuth>} />
           <Route path="/templating" element={<RequireAuth me={me}><HackathonLayout><Templating me={me} /></HackathonLayout></RequireAuth>} />
