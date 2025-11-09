@@ -753,7 +753,7 @@ app.post('/api/export', requireAuth, async (req, res) => {
 
 // API-only root guidance
 app.get('/', (_req, res) => {
-  res.json({ ok: true, message: 'SharkByte RFP API server running. Use the Vite client on http://localhost:5173. Health: /api/health' });
+  res.json({ ok: true, message: 'Rattler Rootkit RFP API server running. Use the Vite client on http://localhost:5173. Health: /api/health' });
 });
 
 // 404 for non-API routes (keep API errors handled by each route)

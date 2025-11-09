@@ -61,7 +61,7 @@ function App(){
           <div className="container-app h-14 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <WhiteHouseLogo className="w-7 h-7 text-brand-700 dark:text-brand-300" />
-              <span className="font-semibold tracking-tight text-slate-900 dark:text-slate-100">SharkByte RFP</span>
+              <span className="font-semibold tracking-tight text-slate-900 dark:text-slate-100">Rattler Rootkit RFP</span>
             </div>
             <nav className="hidden md:block">
               <NavLinks />

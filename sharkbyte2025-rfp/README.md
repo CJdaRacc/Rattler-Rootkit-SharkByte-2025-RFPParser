@@ -1,4 +1,4 @@
-# SharkByte 2025 — RFP Analyzer & Proposal (MERN)
+# Rattler Rootkit 2025 — RFP Analyzer & Proposal (MERN)
 
 This project is now a MERN-style app:
 - MongoDB for persistence (RFPs, proposals, keyword history)
