@@ -297,32 +297,119 @@ async function extractTextFromUpload(file) {
 }
 
 function computeAccuracyAndMissing(parsed, keywords = []) {
-  // Use reference profile if loaded; otherwise fallback to legacy expected labels
-  let expected = null;
-  if (REF_PROFILE && Array.isArray(REF_PROFILE.sections) && REF_PROFILE.sections.length) {
-    expected = REF_PROFILE.sections.map(s => s.key);
-  } else {
-    expected = ['Eligibility','Budget','Timeline','Evaluation','Submission & Compliance','Scope & Activities','Organizational Capacity','Outcomes & Impact','Risk & Mitigation'];
-  }
-  // Normalize present categories to our canonical set (simple aliasing)
-  const alias = new Map([
-    ['Compliance','Submission & Compliance'],
-    ['Submission','Submission & Compliance'],
-    ['Scope','Scope & Activities'],
-    ['Scope/Activities','Scope & Activities'],
-    ['Timeline/Milestones','Timeline'],
-    ['Executive Summary','Executive Summary'],
-    ['Problem/Needs','Eligibility'],
-  ]);
+  // Expected sections: prefer explicit env, else default to 12 canonical sections (Title Case)
+  const envExpected = (process.env.RFP_EXPECTED_SECTIONS || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+  const defaultExpected = [
+    'Evaluation Criteria',
+    'RFP Amendments',
+    'Company Introduction',
+    'Contract Terms',
+    'Proposal Format',
+    'Scope of Work',
+    'Budget',
+    'Performance Specifications',
+    'Required Qualifications',
+    'Submission Details',
+    'Timeline',
+    'Project Overview',
+  ];
+  const expected = envExpected.length ? envExpected : defaultExpected;
+
+  // Normalize present categories to canonical set via aliasing
+  const aliasPairs = [
+    // Legacy categories → new canonical
+    ['Evaluation', 'Evaluation Criteria'],
+    ['Eligibility', 'Required Qualifications'],
+    ['Submission & Compliance', 'Submission Details'],
+    ['Submission', 'Submission Details'],
+    ['Compliance', 'Submission Details'],
+    ['Instructions', 'Submission Details'],
+    ['Scope & Activities', 'Scope of Work'],
+    ['Scope', 'Scope of Work'],
+    ['Statement of Work', 'Scope of Work'],
+    ['Work Plan', 'Scope of Work'],
+    ['Deliverables', 'Scope of Work'],
+    ['Budget', 'Budget'],
+    ['Pricing', 'Budget'],
+    ['Cost', 'Budget'],
+    ['Executive Summary', 'Project Overview'],
+    ['Overview', 'Project Overview'],
+    ['Background', 'Project Overview'],
+    ['Purpose', 'Project Overview'],
+    ['Introduction', 'Project Overview'],
+    ['Organizational Capacity', 'Required Qualifications'],
+    ['Outcomes & Impact', 'Performance Specifications'],
+    ['Risk & Mitigation', 'Contract Terms'],
+    ['Terms & Conditions', 'Contract Terms'],
+    ['Contract', 'Contract Terms'],
+    ['Insurance', 'Contract Terms'],
+    ['Forms & Attachments', 'Proposal Format'],
+    // Other common variants → canonical
+    ['Company Intro', 'Company Introduction'],
+    ['Corporate Overview', 'Company Introduction'],
+    ['Vendor Qualifications', 'Required Qualifications'],
+    ['Format', 'Proposal Format'],
+    ['Contents', 'Proposal Format'],
+    ['Structure', 'Proposal Format'],
+    ['Service Levels', 'Performance Specifications'],
+    ['SLA', 'Performance Specifications'],
+    ['Milestones', 'Timeline'],
+    ['Schedule', 'Timeline'],
+    ['Project Schedule', 'Timeline'],
+    ['Addenda', 'RFP Amendments'],
+    ['Amendments', 'RFP Amendments'],
+  ];
+  const alias = new Map(aliasPairs);
+
   const presentCats = new Set((parsed || []).map(r => {
     let c = String(r.category || '').trim();
     if (alias.has(c)) return alias.get(c);
+    // Try loose mapping by lowercase includes
+    const lc = c.toLowerCase();
+    if (/evaluation/.test(lc)) return 'Evaluation Criteria';
+    if (/(submission|compliance|instruction|submittal)/.test(lc)) return 'Submission Details';
+    if (/(scope|statement of work|work\s*plan|deliverable)/.test(lc)) return 'Scope of Work';
+    if (/(executive|overview|background|purpose|introduction)/.test(lc)) return 'Project Overview';
+    if (/(term|condition|contract|insurance|bond)/.test(lc)) return 'Contract Terms';
+    if (/(budget|pricing|cost)/.test(lc)) return 'Budget';
+    if (/(performance|service level|sla|kpi)/.test(lc)) return 'Performance Specifications';
+    if (/(eligib|qualif|vendor)/.test(lc)) return 'Required Qualifications';
+    if (/(timeline|milestone|schedule)/.test(lc)) return 'Timeline';
+    if (/(amendment|addenda)/.test(lc)) return 'RFP Amendments';
+    if (/(proposal).*?(format|content|structure)/.test(lc) || /format/.test(lc)) return 'Proposal Format';
+    if (/(company|organization).*intro/.test(lc)) return 'Company Introduction';
     return c;
   }));
+
+  // Compute missing in canonical order
   const missing = expected.filter(c => !presentCats.has(c));
+
+  // Base score from coverage + optional keyword boost
   const catScore = (presentCats.size / expected.length);
   const kwScore = (keywords.length ? 0.1 : 0); // small boost if keywords present
-  const accuracy = Math.round(Math.min(1, catScore + kwScore) * 100);
+  let score = Math.min(1, catScore + kwScore);
+
+  // Knock down accuracy when critical sections are missing
+  // Configurable via env:
+  // - RFP_CRITICAL_SECTIONS: comma-separated list of section names
+  // - RFP_CRITICAL_PENALTY: decimal penalty per missing critical section (default 0.1)
+  // - RFP_MIN_ACCURACY_FLOOR: minimum floor after penalties (0..1, default 0.3)
+  const envCrit = (process.env.RFP_CRITICAL_SECTIONS || '').split(',').map(s => s.trim()).filter(Boolean);
+  const defaultCritical = ['Required Qualifications','Submission Details','Timeline','Budget','Evaluation Criteria'];
+  const critical = envCrit.length ? envCrit : defaultCritical;
+  const perPenalty = Math.max(0, Math.min(1, Number(process.env.RFP_CRITICAL_PENALTY || '0.1')));
+  const floor = Math.max(0, Math.min(1, Number(process.env.RFP_MIN_ACCURACY_FLOOR || '0.3')));
+
+  const missingCriticalCount = missing.filter(m => critical.includes(m)).length;
+  if (missingCriticalCount > 0) {
+    const totalPenalty = perPenalty * missingCriticalCount;
+    score = Math.max(floor, score - totalPenalty);
+  }
+
+  const accuracy = Math.round(score * 100);
   return { accuracy, missingItems: missing };
 }
 

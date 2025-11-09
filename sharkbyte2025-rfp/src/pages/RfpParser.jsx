@@ -24,6 +24,7 @@ export default function RfpParser(){
   // Auto-keywords: no user input required
   const [suggestions, setSuggestions] = useState({});
   const [error, setError] = useState('');
+  const [missingOpen, setMissingOpen] = useState(true);
 
   async function onUpload(e){
     e.preventDefault();
@@ -56,6 +57,16 @@ export default function RfpParser(){
   const keywords = rfp?.keywords || [];
   const missing = rfp?.missingItems || [];
 
+  // Initialize Missing Sections toggle state from sessionStorage per RFP
+  useEffect(() => {
+    if (!rfp?._id) return;
+    try {
+      const v = sessionStorage.getItem(`sb_missing_${rfp._id}_collapsed`);
+      // stored as '1' when collapsed; default open when not set
+      setMissingOpen(v === '1' ? false : true);
+    } catch {}
+  }, [rfp?._id]);
+
   return (
     <div>
       {error && <div className="status" style={{color:'#b91c1c'}}>{error}</div>}
@@ -74,7 +85,12 @@ export default function RfpParser(){
         <>
           <div className="card">
             <div className="status">
-              <strong>File:</strong> {rfp.original_filename} <em>({rfp.docType})</em> · <strong>Accuracy:</strong> {rfp.accuracy || 0}% · <strong>Missing:</strong> {missing.join(', ') || '—'}
+              <strong>File:</strong> {rfp.original_filename} <em>({rfp.docType})</em> · <strong>Accuracy:</strong> {rfp.accuracy || 0}% · <strong>Missing:</strong> {(() => {
+                if (!missing || missing.length === 0) return '—';
+                const preview = missing.slice(0, 3).join(', ');
+                const more = missing.length - 3;
+                return more > 0 ? `${preview} +${more} more` : preview;
+              })()}
             </div>
             <AccuracyInfo />
           </div>
@@ -116,20 +132,44 @@ export default function RfpParser(){
           </div>
 
           <div className="card">
-            <h3>Missing Items</h3>
-            {(missing.length === 0) ? <div>None 🎉</div> : (
+            <div className="flex items-center justify-between">
+              <h3>Missing Sections {missing && missing.length ? `(${missing.length})` : ''}</h3>
+              {missing && missing.length > 0 && (
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setMissingOpen(v => {
+                    const nv = !v;
+                    try { if (rfp?._id) sessionStorage.setItem(`sb_missing_${rfp._id}_collapsed`, nv ? '0' : '1'); } catch {}
+                    return nv;
+                  })}
+                  aria-expanded={missingOpen}
+                  aria-controls="missing-sections-body"
+                >
+                  {missingOpen ? 'Hide list' : 'Show list'}
+                </button>
+              )}
+            </div>
+            {(missing.length === 0) ? (
+              <div>None 🎉</div>
+            ) : (
               <>
-                <ul>
-                  {missing.map(m => (
-                    <li key={m} style={{marginBottom:12}}>
-                      <div style={{display:'flex', alignItems:'baseline', gap:8}}>
-                        <strong style={{minWidth:180}}>{m}:</strong>
-                        {renderSuggestionBlock(suggestions[m], rfp?.parsedRequirements || [])}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-                <button onClick={loadSuggestions}>Get Suggestions (Gemini)</button>
+                {missingOpen && (
+                  <div id="missing-sections-body" className="mt-2">
+                    <ul>
+                      {missing.map(m => (
+                        <li key={m} style={{marginBottom:12}}>
+                          <div style={{display:'flex', alignItems:'baseline', gap:8}}>
+                            <strong style={{minWidth:220}}>{m}:</strong>
+                            {renderSuggestionBlock(suggestions[m], rfp?.parsedRequirements || [])}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div className="mt-2">
+                  <button onClick={loadSuggestions}>Get Suggestions (Gemini)</button>
+                </div>
               </>
             )}
           </div>

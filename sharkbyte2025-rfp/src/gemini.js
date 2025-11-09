@@ -77,6 +77,18 @@ export async function generateMissingSuggestions({ missingCategories = [], rfpTe
   // Normalize categories to a canonical set to avoid mismatches (e.g., "Timeline/Milestones" → "Timeline")
   const normalizeCategory = (c) => {
     const s = String(c || '').toLowerCase();
+    // Map new canonical display names → legacy normalization buckets used by fallbacks/keywords
+    if (s === 'evaluation criteria') return 'Evaluation';
+    if (s === 'rfp amendments' || /amendment|addenda/.test(s)) return 'Submission & Compliance';
+    if (s === 'company introduction') return 'Executive Summary';
+    if (s === 'contract terms' || /terms|conditions|contract/.test(s)) return 'Submission & Compliance';
+    if (s === 'proposal format' || /format|structure|content/.test(s)) return 'Submission & Compliance';
+    if (s === 'scope of work' || /statement of work/.test(s)) return 'Scope & Activities';
+    if (s === 'performance specifications' || /service level|sla|kpi|performance/.test(s)) return 'Outcomes & Impact';
+    if (s === 'required qualifications' || /qualif|eligib|vendor/.test(s)) return 'Eligibility';
+    if (s === 'submission details') return 'Submission & Compliance';
+    if (s === 'project overview') return 'Executive Summary';
+    // Legacy buckets
     if (/timeline|milestone/.test(s)) return 'Timeline';
     if (/evaluation/.test(s)) return 'Evaluation';
     if (/submission|compliance/.test(s)) return 'Submission & Compliance';
@@ -84,7 +96,7 @@ export async function generateMissingSuggestions({ missingCategories = [], rfpTe
     if (/eligib/.test(s)) return 'Eligibility';
     if (/scope|activit|work\s*plan/.test(s)) return 'Scope & Activities';
     if (/goal|objective/.test(s)) return 'Goals & Objectives';
-    if (/executive|summary/.test(s)) return 'Executive Summary';
+    if (/executive|summary|overview|introduction|background|purpose/.test(s)) return 'Executive Summary';
     if (/capacity|organi/.test(s)) return 'Organizational Capacity';
     if (/outcome|impact/.test(s)) return 'Outcomes & Impact';
     if (/risk/.test(s)) return 'Risk & Mitigation';

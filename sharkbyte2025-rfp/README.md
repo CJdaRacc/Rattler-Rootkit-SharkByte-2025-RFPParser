@@ -122,6 +122,10 @@ Set these in `.env` (see `.env.example`):
 - Optional:
   - `GEMINI_MODEL` (default `gemini-1.5-flash-002`)
   - `DEBUG_SUGGESTIONS=1` to log prompt/response diagnostics in dev
+  - `RFP_EXPECTED_SECTIONS` — comma‑separated list of section names that the system evaluates for Missing. Defaults (Title Case): Evaluation Criteria, RFP Amendments, Company Introduction, Contract Terms, Proposal Format, Scope of Work, Budget, Performance Specifications, Required Qualifications, Submission Details, Timeline, Project Overview
+  - `RFP_CRITICAL_SECTIONS` — comma‑separated list of section names considered critical (defaults: Required Qualifications, Submission Details, Timeline, Budget, Evaluation Criteria)
+  - `RFP_CRITICAL_PENALTY` — decimal (0..1) penalty per missing critical section (default 0.1)
+  - `RFP_MIN_ACCURACY_FLOOR` — minimum accuracy floor after penalties (0..1, default 0.3)
 
 ## Startup options
 - Development (recommended):

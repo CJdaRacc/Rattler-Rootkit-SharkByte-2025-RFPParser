@@ -51,6 +51,7 @@ export default function AccuracyInfo({ className = '', storageKey = 'sb_rfp_accu
             <li><strong>Category coverage</strong>: We detect official sections (e.g., Eligibility, Timeline, Submission & Compliance). Accuracy rises as more expected sections are present in your parsed requirements.</li>
             <li><strong>Reference guide aware</strong>: When available, we align expected sections to an official reference RFP (20‑09aa) for more realistic categories.</li>
             <li><strong>Keyword boost</strong>: A small bonus is applied when auto‑generated keywords are available, reflecting richer anchoring.</li>
+            <li><strong>Critical section penalty</strong>: Accuracy is knocked down when critical sections are missing (e.g., Eligibility, Submission & Compliance, Timeline, Budget, Evaluation). Admins can tune which sections are critical and the penalty in environment settings.</li>
             <li><strong>Heuristic, not absolute</strong>: OCR quality and unusual formats can affect parsing. Use this as a quick gauge, not a final score.</li>
           </ul>
           <div style={{ marginTop: 8 }}>
