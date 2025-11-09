@@ -56,12 +56,12 @@ export default function Templating(){
         <h2>Proposal Essentials</h2>
         <fieldset>
           <legend>Cover Information</legend>
-          <label>Organization Name<input name="org_name" value={ess.org_name} onChange={change} /></label>
-          <label>Contact Name<input name="contact_name" value={ess.contact_name} onChange={change} /></label>
+          <label>Organization Name<input type="text" name="org_name" value={ess.org_name} onChange={change} /></label>
+          <label>Contact Name<input type="text" name="contact_name" value={ess.contact_name} onChange={change} /></label>
           <label>Email<input type="email" name="email" value={ess.email} onChange={change} /></label>
-          <label>Phone<input name="phone" value={ess.phone} onChange={change} /></label>
-          <label>Address<input name="address" value={ess.address} onChange={change} /></label>
-          <label>Proposal Title<input name="proposal_title" value={ess.proposal_title} onChange={change} /></label>
+          <label>Phone<input type="tel" name="phone" value={ess.phone} onChange={change} /></label>
+          <label>Address<input type="text" name="address" value={ess.address} onChange={change} /></label>
+          <label>Proposal Title<input type="text" name="proposal_title" value={ess.proposal_title} onChange={change} /></label>
         </fieldset>
         <fieldset>
           <legend>Executive Summary</legend>
@@ -75,7 +75,7 @@ export default function Templating(){
         </fieldset>
         <fieldset>
           <legend>Budget</legend>
-          <label>Budget Total<input name="budget_total" value={ess.budget_total} onChange={change} placeholder="$" /></label>
+          <label>Budget Total<input type="text" name="budget_total" value={ess.budget_total} onChange={change} placeholder="$" /></label>
           <label>Budget Narrative<textarea name="budget_narrative" rows={4} value={ess.budget_narrative} onChange={change} /></label>
         </fieldset>
         <fieldset>
